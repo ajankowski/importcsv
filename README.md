@@ -39,6 +39,7 @@ Usage
         .........
         'importcsv'=>array(
             'path'=>'upload/importCsv/', // path to folder for saving csv file and file with import params
+            'allowedTables'=>array('table1','table3'),
         ),
         ......
     ),
