@@ -39,7 +39,7 @@ class DefaultController extends Controller
     );
 
     // Get all the tables from the database.
-    $tables = Yii::app()->getDb()->getSchema()->getTableNames();
+    $tables = $this->getTables();
     $tablesLength = sizeof($tables);
     $tablesArray = array();
     // Set up the tablesArray so it can be used in a form.
@@ -403,5 +403,21 @@ class DefaultController extends Controller
     }
 
     return $paramsArray;
+  }
+
+  /**
+   * Return array of tables
+   *
+   * @return array
+   *   Array of table names.
+   */
+  private function getTables() {
+    $allowedTables = Yii::app()->controller->module->allowedTables;
+    if ($allowedTables) {
+      return $allowedTables;
+    }
+    else {
+      return Yii::app()->getDb()->getSchema()->getTableNames();;
+    }
   }
 }

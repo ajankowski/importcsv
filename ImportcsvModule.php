@@ -7,9 +7,14 @@
 class ImportcsvModule extends CWebModule
 {
   /*
-   * @var path for csv file
+   * @var Path to csv file.
    */
   public $path;
+  /**
+   * @var Allowed tables to import to. This will prevent allowing a user to
+   * import to an unwanted table.
+   */
+  public $allowedTables = array();
 
   public function init()
   {
