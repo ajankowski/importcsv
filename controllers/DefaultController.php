@@ -110,20 +110,28 @@ class DefaultController extends Controller
               }
               else {
                 $error = 0;
-
                 // Import from csv to db.
                 $model = new ImportCsv;
+
                 $tableColumns = $model->tableColumns($table);
 
                 // Select old rows from table.
-                if ($mode == 2 || $mode == 3) {
-                  $oldItems = $model->selectRows($table, $tableKey);
+                if ($mode == ImportCsv::MODE_INSERT_NEW || $mode ==  ImportCsv::MODE_INSERT_NEW_REPLACE_OLD) {
+                  $model->oldItems = $model->selectRows($table, $tableKey);
                 }
 
                 $filecontent = file($uploadfile);
                 $lengthFile = sizeof($filecontent);
                 $insertCounter = 0;
                 $stepsOk = 0;
+
+                $model->table = $table;
+                $model->columns = $columns;
+                $model->tableColumns = $tableColumns;
+                $model->lengthFile = $lengthFile;
+                $model->perRequest = $perRequest;
+                $model->csvKey = $csvKey;
+                $model->tableKey = $tableKey;
 
                 // Begin transaction.
                 $transaction = Yii::app()->db->beginTransaction();
@@ -134,116 +142,71 @@ class DefaultController extends Controller
                       $csvLine = ($textDelimiter) ? str_getcsv($filecontent[$i], $delimiter, $textDelimiter) : str_getcsv($filecontent[$i], $delimiter);
 
                       // Mode 1. insert All.
-                      if ($mode == 1) {
-                        $insertArray[] = $csvLine;
-                        $insertCounter++;
-
-                        if ($insertCounter == $perRequest || $i == $lengthFile - 1) {
-                          $import = $model->InsertAll($table, $insertArray, $columns, $tableColumns);
-                          $insertCounter = 0;
-                          $insertArray = array();
-
-                          if ($import != 1) {
-                            $arrays[] = $i;
-                          }
-                        }
+                      if ($mode == ImportCsv::MODE_IMPORT_ALL) {
+                        $model->insertAllIntoDatabase($csvLine, $i);
                       }
 
                       // Mode 2. Insert new.
-                      if ($mode == 2) {
-                        if ($csvLine[$csvKey - 1] == '' || !$this->searchInOld($oldItems, $csvLine[$csvKey - 1], $tableKey)) {
-                          $insertArray[] = $csvLine;
-                          $insertCounter++;
-                        if ($insertCounter == $perRequest || $i == $lengthFile - 1) {
-                          $import = $model->InsertAll($table, $insertArray, $columns, $tableColumns);
-                          $insertCounter = 0;
-                          $insertArray = array();
-
-                          if ($import != 1) {
-                            $arrays[] = $i;
-                          }
-                        }
+                      if ($mode == ImportCsv::MODE_INSERT_NEW) {
+                        $model->insertNewIntoDatabse($csvLine, $i);
                       }
-                    }
 
-                    // Mode 3. Insert new and replace old.
-                    if ($mode == 3) {
-                      if ($csvLine[$csvKey - 1] == '' || !$this->searchInOld($oldItems, $csvLine[$csvKey - 1], $tableKey)) {
-
-                        // Insert new.
-                        $insertArray[] = $csvLine;
-                        $insertCounter++;
-                        if ($insertCounter == $perRequest || $i == $lengthFile - 1) {
-                          $import = $model->InsertAll($table, $insertArray, $columns, $tableColumns);
-                          $insertCounter = 0;
-                          $insertArray = array();
-
-                          if ($import != 1) {
-                            $arrays[] = $i;
-                          }
-                        }
-                      }
-                      else {
-                        // Replace old.
-                        $import = $model->updateOld($table, $csvLine, $columns, $tableColumns, $csvLine[$csvKey - 1], $tableKey);
-
-                        if ($import != 1) {
-                          $arrays[] = $i;
-                        }
+                      // Mode 3. Insert new and replace old.
+                      if ($mode == ImportCsv::MODE_INSERT_NEW_REPLACE_OLD) {
+                        $model->insertNewReplaceOldIntoDatabse($csvLine, $i);
                       }
                     }
                   }
+
+                  if ($insertCounter != 0) {
+                    $model->InsertAll($table, $insertArray, $columns, $tableColumns);
+                  }
+
+                  // commit transaction if not exception
+                  $transaction->commit();
+                }
+                catch (Exception $e) { // exception in transaction
+                  $transaction->rollBack();
                 }
 
-                if ($insertCounter != 0) {
-                  $model->InsertAll($table, $insertArray, $columns, $tableColumns);
-                }
-
-                // commit transaction if not exception
-                $transaction->commit();
+                // Save params in file.
+                $this->saveInFile($table, $delimiter, $mode, $perRequest, $csvKey, $tableKey, $tableColumns, $columns, $uploadfile, $textDelimiter);
               }
-              catch (Exception $e) { // exception in transaction
-                $transaction->rollBack();
-              }
-
-              // Save params in file.
-              $this->saveInFile($table, $delimiter, $mode, $perRequest, $csvKey, $tableKey, $tableColumns, $columns, $uploadfile, $textDelimiter);
+            }
+            else {
+              $error = 3;
             }
           }
           else {
-            $error = 3;
+           $error = 2;
           }
         }
         else {
-         $error = 2;
+          $error = 1;
         }
-      }
-      else {
-        $error = 1;
+
+        $this->layout = 'clear';
+        $this->render('thirdResult', array(
+          'error' => $error,
+          'delimiter' => $delimiter,
+          'textDelimiter' => $textDelimiter,
+          'table' => $table,
+          'uploadfile' => $uploadfile,
+          'error_array' => $error_array,
+        ));
       }
 
-      $this->layout = 'clear';
-      $this->render('thirdResult', array(
-        'error' => $error,
+      Yii::app()->end();
+    }
+    else {
+      // First loading.
+      $this->render('index', array(
         'delimiter' => $delimiter,
         'textDelimiter' => $textDelimiter,
-        'table' => $table,
-        'uploadfile' => $uploadfile,
-        'error_array' => $error_array,
+        'tablesArray' => $tablesArray,
       ));
     }
-
-    Yii::app()->end();
   }
-  else {
-    // First loading.
-    $this->render('index', array(
-      'delimiter' => $delimiter,
-      'textDelimiter' => $textDelimiter,
-      'tablesArray' => $tablesArray,
-    ));
-  }
-}
 
   /**
    * File upload
@@ -282,28 +245,6 @@ class DefaultController extends Controller
         'textDelimiterFromFile' => $textDelimiterFromFile,
         'tableFromFile' => $tableFromFile,
     ));
-  }
-
-  /**
-   * Search need in old rows.
-   *
-   * @param array $array
-   *   Old itmes from database.
-   * @param  string
-   *   Old value from databse.
-   *
-   * @return boolean $return
-   */
-  public function searchInOld($array, $needle, $key) {
-    $return = false;
-    $arrayLength = sizeof($array);
-    for ($i = 0; $i < $arrayLength; $i++) {
-      if ($array[$i][$key] == $needle) {
-        $return = true;
-      }
-    }
-
-    return $return;
   }
 
   /**
