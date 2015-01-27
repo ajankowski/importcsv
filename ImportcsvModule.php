@@ -15,6 +15,12 @@ class ImportcsvModule extends CWebModule
    * import to an unwanted table.
    */
   public $allowedTables = array();
+  /**
+   * @var Allow the code to call your class which extends the ImportCsv Class
+   * in order to make custom modifications. Set the overwrite to a table.
+   *   array('table_name' => 'overwrite class').
+   */
+  public $importCsvOverwrite = array();
 
   public function init()
   {

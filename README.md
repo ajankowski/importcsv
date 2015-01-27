@@ -23,6 +23,16 @@ Module has 3 modes:
 
 All parameters from the previous imports will be saved in a special .php file in upload folder.
 
+Options:
+path - Required: The path to the folder for saving the csv file.
+allowedTables - Optional: An array of table names. Useful if you don't want a
+                user to accidentally import to an important table.
+importCsvOverwrite - Optional: Allows another class (which extends ImportCsv) to
+                     be called instead of ImportCsv in order to make changes.
+                     Most cases your custom class will overwrite the
+                     modifyCsvLine() method to make custom changes.
+
+
 Requirements
 ============
 
@@ -39,7 +49,8 @@ Usage
         .........
         'importcsv'=>array(
             'path'=>'upload/importCsv/', // path to folder for saving csv file and file with import params
-            'allowedTables'=>array('table1','table3'),
+            'allowedTables'=>array('table1','table3'), // Tables that are allowed.
+            'importCsvOverwrite' => array('company' => 'ImportcsvCompanyImport'), // Overwrite class
         ),
         ......
     ),

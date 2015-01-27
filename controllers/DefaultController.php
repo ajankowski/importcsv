@@ -110,8 +110,17 @@ class DefaultController extends Controller
               }
               else {
                 $error = 0;
-                // Import from csv to db.
-                $model = new ImportCsv;
+
+                $overrwrite = Yii::app()->controller->module->importCsvOverwrite;
+
+                // Check if a class extends the ImportCsv class. If it does
+                // then call it otherwise just call the ImportCsv class.
+                if (isset($overrwrite[$table])) {
+                  $model = new $overrwrite[$table];
+                }
+                else {
+                  $model = new ImportCsv;
+                }
 
                 $tableColumns = $model->tableColumns($table);
 
