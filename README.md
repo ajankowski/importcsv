@@ -31,6 +31,8 @@ importCsvOverwrite - Optional: Allows another class (which extends ImportCsv) to
                      be called instead of ImportCsv in order to make changes.
                      Most cases your custom class will overwrite the
                      modifyCsvLine() method to make custom changes.
+pathToSaveOldData - Optional: If a path is set it will save a csv of the table
+                    before the import.
 
 
 Requirements

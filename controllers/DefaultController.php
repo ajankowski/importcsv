@@ -127,6 +127,12 @@ class DefaultController extends Controller
                 // Select old rows from table.
                 if ($mode == ImportCsv::MODE_INSERT_NEW || $mode ==  ImportCsv::MODE_INSERT_NEW_REPLACE_OLD) {
                   $model->oldItems = $model->selectRows($table, $tableKey);
+
+                  $pathToSaveOldData = Yii::app()->controller->module->pathToSaveOldData;
+
+                  if ($pathToSaveOldData) {
+                    $this->saveOldDataToCSV($pathToSaveOldData, $model->selectRows($table, '*'));
+                  }
                 }
 
                 $filecontent = file($uploadfile);
@@ -371,5 +377,33 @@ class DefaultController extends Controller
     else {
       return Yii::app()->getDb()->getSchema()->getTableNames();;
     }
+  }
+
+  /**
+   * Before you import new data save the old data to a csv file to have for
+   * record.
+   *
+   * @param array $oldData
+   *   Table data before import
+   * @param $string $path
+   *   Path to the csv import.
+   *
+   * @return boolean
+   */
+  public function saveOldDataToCSV($path, $oldData) {
+    if (count($oldData) == 0) {
+      return NULL;
+    }
+
+    $file = fopen($path . "/old_data_export_" . date('mdy-his') . '.csv', 'w');
+    fputcsv($file, array_keys(reset($oldData)));
+
+    foreach ($oldData as $row) {
+      fputcsv($file, $row);
+    }
+
+    fclose($file);
+
+    return TRUE;
   }
 }

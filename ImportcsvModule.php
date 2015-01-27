@@ -21,6 +21,10 @@ class ImportcsvModule extends CWebModule
    *   array('table_name' => 'overwrite class').
    */
   public $importCsvOverwrite = array();
+  /**
+   * @var Path to save old data.
+   */
+  public $pathToSaveOldData = FALSE;
 
   public function init()
   {
