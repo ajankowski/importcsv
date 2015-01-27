@@ -232,6 +232,9 @@ class ImportCsv extends CFormModel
   public function insertNewReplaceOldIntoDatabse($csvLine, $count)
   {
     if ($csvLine[$this->csvKey - 1] == '' || !$this->searchInOld($this->oldItems, $csvLine[$this->csvKey - 1], $this->tableKey)) {
+      // insert new
+      $this->insertArray[] = $csvLine;
+      $this->insertCounter++;
       if ($this->insertCounter == $this->perRequest || $count == $this->lengthFile - 1) {
         $import = $this->InsertAll($this->table, $this->insertArray, $this->columns, $this->tableColumns);
         $this->insertCounter = 0;

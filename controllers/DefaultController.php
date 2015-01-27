@@ -176,7 +176,7 @@ class DefaultController extends Controller
                   }
 
                   if ($insertCounter != 0) {
-                    $model->InsertAll($table, $insertArray, $columns, $tableColumns);
+                    $model->InsertAll($table, $model->insertArray, $columns, $tableColumns);
                   }
 
                   // commit transaction if not exception
