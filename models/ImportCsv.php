@@ -43,6 +43,11 @@ class ImportCsv extends CFormModel
     $n = 0;
     $linesLength = sizeof($linesArray); // size of line for insert array
 
+    // If there is a blank line just stop here.
+    if ($linesLength == 0) {
+      return (0);
+    }
+
     // Watching all strings in array.
     for ($k=0; $k<$linesLength; $k++) {
 
@@ -126,6 +131,7 @@ class ImportCsv extends CFormModel
     // update row in database
     $sql = "UPDATE " . $table . " SET " . $tableString . " WHERE " . $tableKey . "='" . $needle . "'";
     $command=Yii::app()->db->createCommand($sql);
+
     if ($command->execute()) {
       return (1);
     }
@@ -239,7 +245,6 @@ class ImportCsv extends CFormModel
     else {
       // Replace old.
       $import = $this->updateOld($this->table, $csvLine, $this->columns, $this->tableColumns, $csvLine[$this->csvKey - 1], $this->tableKey);
-
       if ($import != 1) {
         $this->not_imported[] = $count;
       }
@@ -266,5 +271,27 @@ class ImportCsv extends CFormModel
     }
 
     return $return;
+  }
+
+  /**
+   * Make any modifications before csv line gets processed.
+   */
+  public function modifyCsvLine(&$csvLine) {
+    /*
+    // Create a class that implements ImportCsv and over write this method.
+    // Below is an example to modify a field.
+
+    $columnsLength = sizeof($this->columns);
+
+    for($i=0; $i<$columnsLength; $i++) {
+      if($this->columns[$i]!='') {
+        switch($this->tableColumns[$i]) {
+          case 'zipcode':
+            $csvLine[$this->columns[$i]-1] = '66666';
+            break;
+        }
+      }
+    }
+    */
   }
 }

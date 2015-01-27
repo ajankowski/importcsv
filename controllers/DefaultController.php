@@ -141,6 +141,8 @@ class DefaultController extends Controller
                     if ($i != 0 && $filecontent[$i] != '') {
                       $csvLine = ($textDelimiter) ? str_getcsv($filecontent[$i], $delimiter, $textDelimiter) : str_getcsv($filecontent[$i], $delimiter);
 
+                      $model->modifyCsvLine($csvLine);
+
                       // Mode 1. insert All.
                       if ($mode == ImportCsv::MODE_IMPORT_ALL) {
                         $model->insertAllIntoDatabase($csvLine, $i);
