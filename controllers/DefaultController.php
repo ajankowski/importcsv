@@ -174,8 +174,9 @@ class DefaultController extends Controller
                       }
                     }
                   }
-
-                  if ($insertCounter != 0) {
+                  // If items weren't added because they were less than the
+                  // request amount.
+                  if ($model->insertCounter !== 0) {
                     $model->InsertAll($table, $model->insertArray, $columns, $tableColumns);
                   }
 

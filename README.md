@@ -33,6 +33,16 @@ importCsvOverwrite - Optional: Allows another class (which extends ImportCsv) to
                      modifyCsvLine() method to make custom changes.
 pathToSaveOldData - Optional: If a path is set it will save a csv of the table
                     before the import.
+htmlDecodeBeforeDatabaseInsert - Optional: When a csv is imported into the
+                                 database it encodes all html entities. Some
+                                 cases you don't want all your characters to be
+                                 encoded. By default it converst &amp; to &. You
+                                 can provide all the characters you want to get
+                                 decoded by providing an array like this:
+                                 array(
+                                   '&amp;' => '&',
+                                   '&gt;' => '>',
+                                 )
 
 
 Requirements
@@ -48,13 +58,17 @@ Usage
 2) Register this module in /protected/config/main.php
 
     'modules'=>array(
-        .........
-        'importcsv'=>array(
-            'path'=>'upload/importCsv/', // path to folder for saving csv file and file with import params
-            'allowedTables'=>array('table1','table3'), // Tables that are allowed.
-            'importCsvOverwrite' => array('company' => 'ImportcsvCompanyImport'), // Overwrite class
+      .........
+      'importcsv'=>array(
+        'path'=>'upload/importCsv/', // path to folder for saving csv file and file with import params
+        'allowedTables'=>array('table1','table3'), // Tables that are allowed.
+        'importCsvOverwrite' => array('company' => 'ImportcsvCompanyImport'), // Overwrite class
+        'htmlDecodeBeforeDatabaseInsert' => array(
+          '&amp;' => '&',
+          '&gt;' => '>',
         ),
-        ......
+      ),
+      ......
     ),
 
 3) Create a directory which you use in 'path'. Do not forget to set access permissions for directory 'path'.

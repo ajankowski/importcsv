@@ -25,6 +25,12 @@ class ImportcsvModule extends CWebModule
    * @var Path to save old data.
    */
   public $pathToSaveOldData = FALSE;
+  /**
+   * @var An array containing characters to keep when inserting into database
+   */
+  public $htmlDecodeBeforeDatabaseInsert = array(
+    '&amp;' => '&',
+  );
 
   public function init()
   {

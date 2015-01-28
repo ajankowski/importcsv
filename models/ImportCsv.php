@@ -68,7 +68,12 @@ class ImportCsv extends CFormModel
             $csvString = $csvString."), (";
           }
 
-          $csvString = ($n_in!=0) ? $csvString.", '".CHtml::encode(stripslashes($linesArray[$k][$columns[$i]-1]))."'" : $csvString."'".CHtml::encode(stripslashes($linesArray[$k][$columns[$i]-1]))."'";
+          $encodedValue = CHtml::encode(stripslashes($linesArray[$k][$columns[$i]-1]));
+          if (Yii::app()->controller->module->htmlDecodeBeforeDatabaseInsert) {
+            $encodedValue = $this->stringReplace(Yii::app()->controller->module->htmlDecodeBeforeDatabaseInsert, $encodedValue);
+          }
+
+          $csvString = ($n_in!=0) ? $csvString.", '" . $encodedValue . "'" : $csvString . "'" . $encodedValue . "'";
 
           $n++;
           $n_in++;
@@ -118,11 +123,17 @@ class ImportCsv extends CFormModel
 
     for($i=0; $i<$columnsLength; $i++) {
       if($columns[$i]!='') {
+        $encodedValue = CHtml::encode(stripslashes($csvLine[$columns[$i]-1]));
+        // Only encode if set tot true. So
+        if (Yii::app()->controller->module->htmlDecodeBeforeDatabaseInsert) {
+          $encodedValue = $this->stringReplace(Yii::app()->controller->module->htmlDecodeBeforeDatabaseInsert, $encodedValue);
+        }
+
         if ($n!=0) {
-          $tableString = $tableString.", ".$tableColumns[$i]."='".CHtml::encode(stripslashes($csvLine[$columns[$i]-1]))."'";
+          $tableString = $tableString.", ".$tableColumns[$i]."='" . $encodedValue . "'";
         }
         else {
-          $tableString = $tableColumns[$i]."='".CHtml::encode(stripslashes($csvLine[$columns[$i]-1]))."'";
+          $tableString = $tableColumns[$i]."='" . $encodedValue . "'";
         }
         $n++;
       }
@@ -274,6 +285,24 @@ class ImportCsv extends CFormModel
     }
 
     return $return;
+  }
+
+  /**
+   * Function that simply checks and replaces values from an input array. Useful
+   * after encoding HTML but actually wanting some tags to be decoded.
+   *
+   * @param array $allowed
+   *  an array of allowed tags. Example array('&amp;' => '&');
+   *
+   * @param string $value
+   *  replaced value.
+   */
+  public function stringReplace($allowed, $value) {
+    foreach ($allowed as $htmlVersion => $decodedVersion) {
+      $value = str_replace($htmlVersion, $decodedVersion, $value);
+    }
+
+    return $value;
   }
 
   /**
